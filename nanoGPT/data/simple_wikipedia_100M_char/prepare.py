@@ -9,6 +9,8 @@ import pickle
 import requests
 import numpy as np
 import string
+from pathlib import Path
+
 
 # # download the tiny shakespeare dataset
 # input_file_path = os.path.join(os.path.dirname(__file__), 'input.txt')
@@ -17,7 +19,8 @@ import string
 #     with open(input_file_path, 'w') as f:
 #         f.write(requests.get(data_url).text)
 
-dataset_folder_path = r'/ss_llm/babylm_data'
+#dataset_folder_path = r'/ss-llm/babylm_data'
+dataset_folder_path = Path(__file__).parents[3] / 'babylm_data'
 
 train_ds = 'babylm_100M'
 dev_ds = 'babylm_dev'
