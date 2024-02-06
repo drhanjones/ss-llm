@@ -6,7 +6,7 @@
 #SBATCH --partition=gpu
 #SBATCH --gpus-per-node=4
 #SBATCH --output=logs/%j.out
-#SBATCH --error = logs/%j.err
+#SBATCH --error=logs/%j.err
 #SBATCH -t 1:30:00
 
 echo $SLURM_JOB_ID
