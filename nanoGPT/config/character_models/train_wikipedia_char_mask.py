@@ -4,14 +4,33 @@ import time
 
 
 # wandb logging
-dataset = 'simple_wikipedia_100M_char'
-out_dir = 'out-simple_wikipedia_100M-char'
-
-
+dataset = 'wikipedia_char'
 wandb_log = True # disabled by default
-wandb_project = 'simple_wiki'
-wandb_run_name = 'sw100M_char_gpt2'+ "run" + str(int(time.time()))
+wandb_project = 'wikipedia'
 
+wm_mask = True
+wm_decay_rate = 10
+wm_decay_type = "exponential"
+
+
+
+if wm_mask:
+    mask_part = "mask_"
+    if wm_decay_type == "exponential":
+        mask_part += f"e{wm_decay_rate:03}"
+    elif wm_decay_type == "linear":
+        mask_part += "lin"
+else:
+    mask_part = "nomask"
+
+out_dir = f'output_dump/out-{dataset}-{mask_part}'
+wandb_run_name = f'{dataset}_{mask_part}_gpt2'+ "run" + str(int(time.time()))
+
+
+#out_dir = 'out-wikipedia-char-mask'
+#wandb_run_name = 'wikipedia_char_mask_e500_gpt2'+ "run" + str(int(time.time()))
+
+#out_dir, wandb_run_name = get_save_name(dataset, wm_mask, wm_decay_rate, wm_decay_type)
 
 eval_interval = 250 # keep frequent because we'll overfit
 eval_iters = 200

@@ -28,7 +28,7 @@ import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
 
-from model import GPTConfig, GPT
+from model import GPTConfig, GPT, WMConfig
 
 
 # wandb logging
@@ -61,6 +61,11 @@ n_head = 12
 n_embd = 768
 dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
+
+wm_mask = False # whether to use a mask for the attention layer
+wm_decay_rate = 2 # how fast to decay the mask
+wm_decay_type = "linear" # "linear" or "exponential"
+
 
 # adamw optimizer
 learning_rate = 6e-4 # max learning rate
@@ -162,8 +167,14 @@ if init_from == 'scratch':
     if meta_vocab_size is None:
         print("defaulting to vocab_size of GPT-2 to 50304 (50257 rounded up for efficiency)")
     model_args['vocab_size'] = meta_vocab_size if meta_vocab_size is not None else 50304
+    wmconf = WMConfig(wm_mask=wm_mask, wm_decay_rate=wm_decay_rate, wm_decay_type=wm_decay_type)
+    model_args['wmconfig'] = wmconf
     gptconf = GPTConfig(**model_args)
-    model = GPT(gptconf)
+    #print("WM Config: ", wm_mask, wm_decay_rate, wm_decay_type)
+
+    #gptconf.wmconf = wmconf
+    #print("H2, wmconf: ", gptconf.wmconf)
+    model = GPT(gptconf) 
 elif init_from == 'resume':
     print(f"Resuming training from {out_dir}")
     # resume training from a checkpoint.

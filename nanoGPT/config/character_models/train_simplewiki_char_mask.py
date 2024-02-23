@@ -4,13 +4,13 @@ import time
 
 
 # wandb logging
-dataset = 'wikipedia_100M_char'
-out_dir = 'out-wikipedia_100M-char'
+dataset = 'simple_wikipedia_char'
+out_dir = 'out-simple_wikipedia-char-mask-2'
 
 
 wandb_log = True # disabled by default
-wandb_project = 'wikipedia'
-wandb_run_name = 'w100M_char_gpt2'+ "run" + str(int(time.time()))
+wandb_project = 'simple_wiki'
+wandb_run_name = 'sw_char_gpt2_mask'+ "run" + str(int(time.time()))
 
 
 eval_interval = 250 # keep frequent because we'll overfit
@@ -25,8 +25,11 @@ always_save_checkpoint = False
 #wandb_run_name = 'mini-gpt'
 
 
+wm_mask = True
+wm_decay_rate = 2
+wm_decay_type = "exponential"
 
-
+#Masking option
 
 
 gradient_accumulation_steps = 1
@@ -38,6 +41,7 @@ n_layer = 6
 n_head = 6
 n_embd = 384
 dropout = 0.2
+
 
 learning_rate = 1e-3 # with baby networks can afford to go a bit higher
 max_iters = 5000

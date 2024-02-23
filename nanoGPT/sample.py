@@ -37,6 +37,7 @@ if init_from == 'resume':
     ckpt_path = os.path.join(out_dir, 'ckpt.pt')
     checkpoint = torch.load(ckpt_path, map_location=device)
     gptconf = GPTConfig(**checkpoint['model_args'])
+    print("G2",gptconf)
     model = GPT(gptconf)
     state_dict = checkpoint['model']
     unwanted_prefix = '_orig_mod.'
@@ -63,9 +64,24 @@ if load_meta:
     with open(meta_path, 'rb') as f:
         meta = pickle.load(f)
     # TODO want to make this more general to arbitrary encoder/decoder schemes
-    stoi, itos = meta['stoi'], meta['itos']
-    encode = lambda s: [stoi[c] for c in s]
-    decode = lambda l: ''.join([itos[i] for i in l])
+
+    #CHECK IF CUSTOM BPE IS AN OPTION IN META
+
+    if meta.get("custom_tokenizer", False):
+        print("Using custom tokenizer from meta.pkl")
+        #Ideally you'll want to save the tokenizer and read that file
+        #Maybe save file name of tokenizer and then load it here
+
+        #encode = lambda s: meta['tokenizer'].encode(s)
+        #decode = lambda l: meta['tokenizer'].decode(l)
+    else:
+        if meta.get("stoi", False):
+            print("Using stoi/itos from meta.pkl")
+            stoi, itos = meta['stoi'], meta['itos']
+            encode = lambda s: [stoi[c] for c in s]
+            decode = lambda l: ''.join([itos[i] for i in l])
+        else:
+            pass
 else:
     # ok let's assume gpt-2 encodings by default
     print("No meta.pkl found, assuming GPT-2 encodings...")

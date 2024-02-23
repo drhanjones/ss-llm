@@ -9,6 +9,7 @@ https://github.com/huggingface/transformers/blob/main/src/transformers/models/gp
 
 import math
 import inspect
+import time
 from dataclasses import dataclass
 
 import torch
@@ -41,33 +42,83 @@ class CausalSelfAttention(nn.Module):
         self.n_head = config.n_head
         self.n_embd = config.n_embd
         self.dropout = config.dropout
+        self.wm_config = config.wmconfig
+        self.wm_mask = config.wmconfig.wm_mask
         # flash attention make GPU go brrrrr but support is only in PyTorch >= 2.0
         self.flash = hasattr(torch.nn.functional, 'scaled_dot_product_attention')
+        if self.wm_mask:
+            print("Setting flash to False because wm_mask is enabled")
+            self.flash = False # disable for now to test manually implemented attention with mask
         if not self.flash:
             print("WARNING: using slow attention. Flash Attention requires PyTorch >= 2.0")
             # causal mask to ensure that attention is only applied to the left in the input sequence
             self.register_buffer("bias", torch.tril(torch.ones(config.block_size, config.block_size))
                                         .view(1, 1, config.block_size, config.block_size))
 
+    def get_decay_weight_matrix(self, n, decay_factor=None, decay_type=None):
+
+        if decay_type == 'linear':
+            decay_values = torch.linspace(1, 0, n)
+        #elif decay_type == 'exponential':
+        #    decay_values = torch.arange(n, 0, -1, dtype=float) ** decay_factor
+        #    decay_values/=torch.max(decay_values)
+        # elif decay_type == 'logarithmic':
+        #     decay_values = torch.log(torch.arange(n, 0, -1) + 1)
+        elif decay_type == 'exponential':
+            nums = torch.linspace(0, 1, n)
+            decay_values = torch.exp(-nums * decay_factor)
+        # Apply the decay values to the lower triangle
+
+        indices = torch.arange(n)[:, None] - torch.arange(n)
+        lower_triangle = torch.tril(decay_values[indices])
+        lower_triangle = lower_triangle.float()
+
+        return lower_triangle
+    
     def forward(self, x):
-        B, T, C = x.size() # batch size, sequence length, embedding dimensionality (n_embd)
+        # batch size, sequence length, embedding dimensionality (n_embd)
+        # B is batch size, T is sequence length, C is embedding dimensionality
+        B, T, C = x.size()
 
         # calculate query, key, values for all heads in batch and move head forward to be the batch dim
+        # Calculate where k,q,v for each batch for each head is of the size T,Hs where Hs = C // n_head
+
         q, k, v  = self.c_attn(x).split(self.n_embd, dim=2)
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
         q = q.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
         v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
 
-        # causal self-attention; Self-attend: (B, nh, T, hs) x (B, nh, hs, T) -> (B, nh, T, T)
+        # causal self-attention; Self-attend: (B, nh, T, hs) x (B, nh, hs, T) -> (B, nh, T, T) (nh = number of heads, hs = head size)
         if self.flash:
             # efficient attention using Flash Attention CUDA kernels
             y = torch.nn.functional.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=self.dropout if self.training else 0, is_causal=True)
+            # if self.wm_mask:
+            #     #Add linearly decreasing weight to output
+            #     mask = self.get_decay_weight_matrix(T, decay_factor=1, decay_type='linear').to(x.device)
+            #     assert mask.shape == y.shape
+            #     y = y * mask
+
         else:
             # manual implementation of attention
             att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
             att = att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
             att = F.softmax(att, dim=-1)
             att = self.attn_dropout(att)
+
+            
+            if self.wm_mask:
+                wm_mask = self.get_decay_weight_matrix(T, decay_factor=self.wm_config.wm_decay_rate, decay_type=self.wm_config.wm_decay_type).to(x.device)
+                #print(att.shape[-2:]==wm_mask.shape[-2:])
+                assert att.shape[-2:]==wm_mask.shape[-2:]
+                #print("h13",att.shape, wm_mask.shape)
+
+                #print(att.type(), wm_mask.type())
+                #print("H1, att: ", att[0,0,-1,-15:])
+                #print("H4, wm_mask: ", wm_mask[-1,-15:])
+                att = att * wm_mask
+                #print("H5, att: ", att[0,0,-1,-15:])
+                #time.sleep(25)
+            
             y = att @ v # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
         y = y.transpose(1, 2).contiguous().view(B, T, C) # re-assemble all head outputs side by side
 
@@ -106,6 +157,12 @@ class Block(nn.Module):
         return x
 
 @dataclass
+class WMConfig:
+    wm_mask: bool = False
+    wm_decay_rate: int = 1
+    wm_decay_type: str = "linear"
+    
+@dataclass
 class GPTConfig:
     block_size: int = 1024
     vocab_size: int = 50304 # GPT-2 vocab_size of 50257, padded up to nearest multiple of 64 for efficiency
@@ -114,6 +171,12 @@ class GPTConfig:
     n_embd: int = 768
     dropout: float = 0.0
     bias: bool = True # True: bias in Linears and LayerNorms, like GPT-2. False: a bit better and faster
+    #wm_mask: bool = False # True: add decreasing weight to output, False: no mask
+    wmconfig: WMConfig = WMConfig()    
+
+
+
+
 
 class GPT(nn.Module):
 
@@ -122,7 +185,7 @@ class GPT(nn.Module):
         assert config.vocab_size is not None
         assert config.block_size is not None
         self.config = config
-
+        #print("H3 wm_mask: ", config.wmconfig.wm_mask)
         self.transformer = nn.ModuleDict(dict(
             wte = nn.Embedding(config.vocab_size, config.n_embd),
             wpe = nn.Embedding(config.block_size, config.n_embd),
@@ -146,6 +209,8 @@ class GPT(nn.Module):
 
         # report number of parameters
         print("number of parameters: %.2fM" % (self.get_num_params()/1e6,))
+        #Sleep to allow user to cancel if model is too large
+        #time.sleep(25)
 
     def get_num_params(self, non_embedding=True):
         """
