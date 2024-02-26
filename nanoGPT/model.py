@@ -42,8 +42,12 @@ class CausalSelfAttention(nn.Module):
         self.n_head = config.n_head
         self.n_embd = config.n_embd
         self.dropout = config.dropout
-        self.wm_config = config.wmconfig
-        self.wm_mask = config.wmconfig.wm_mask
+        #self.wm_config = config.wmconfig
+
+        self.wm_mask = config.wm_mask
+        self.wm_decay_rate = config.wm_decay_rate
+        self.wm_decay_type = config.wm_decay_type
+        
         # flash attention make GPU go brrrrr but support is only in PyTorch >= 2.0
         self.flash = hasattr(torch.nn.functional, 'scaled_dot_product_attention')
         if self.wm_mask:
@@ -107,7 +111,7 @@ class CausalSelfAttention(nn.Module):
 
             
             if self.wm_mask:
-                wm_mask = self.get_decay_weight_matrix(T, decay_factor=self.wm_config.wm_decay_rate, decay_type=self.wm_config.wm_decay_type).to(x.device)
+                wm_mask = self.get_decay_weight_matrix(T, decay_factor=self.wm_decay_rate, decay_type=self.wm_decay_type).to(x.device)
                 #print(att.shape[-2:]==wm_mask.shape[-2:])
                 assert att.shape[-2:]==wm_mask.shape[-2:]
                 #print("h13",att.shape, wm_mask.shape)
@@ -157,10 +161,10 @@ class Block(nn.Module):
         return x
 
 @dataclass
-class WMConfig:
-    wm_mask: bool = False
-    wm_decay_rate: int = 1
-    wm_decay_type: str = "linear"
+# class WMConfig:
+#     wm_mask: bool = False
+#     wm_decay_rate: int = 1
+#     wm_decay_type: str = "linear"
     
 @dataclass
 class GPTConfig:
@@ -172,8 +176,11 @@ class GPTConfig:
     dropout: float = 0.0
     bias: bool = True # True: bias in Linears and LayerNorms, like GPT-2. False: a bit better and faster
     #wm_mask: bool = False # True: add decreasing weight to output, False: no mask
-    wmconfig: WMConfig = WMConfig()    
+    #wmconfig: WMConfig = WMConfig()    
 
+    wm_mask: bool = False
+    wm_decay_rate: int = 1
+    wm_decay_type: str = "linear"
 
 
 

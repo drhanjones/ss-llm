@@ -159,7 +159,8 @@ if os.path.exists(meta_path):
 
 # model init
 model_args = dict(n_layer=n_layer, n_head=n_head, n_embd=n_embd, block_size=block_size,
-                  bias=bias, vocab_size=None, dropout=dropout) # start with model_args from command line
+                  bias=bias, vocab_size=None, dropout=dropout, wm_mask=wm_mask, 
+                  wm_decay_rate=wm_decay_rate, wm_decay_type=wm_decay_type) # start with model_args from command line
 if init_from == 'scratch':
     # init a new model from scratch
     print("Initializing a new model from scratch")
@@ -167,8 +168,8 @@ if init_from == 'scratch':
     if meta_vocab_size is None:
         print("defaulting to vocab_size of GPT-2 to 50304 (50257 rounded up for efficiency)")
     model_args['vocab_size'] = meta_vocab_size if meta_vocab_size is not None else 50304
-    wmconf = WMConfig(wm_mask=wm_mask, wm_decay_rate=wm_decay_rate, wm_decay_type=wm_decay_type)
-    model_args['wmconfig'] = wmconf
+    #wmconf = WMConfig(wm_mask=wm_mask, wm_decay_rate=wm_decay_rate, wm_decay_type=wm_decay_type)
+    #model_args['wmconfig'] = wmconf
     gptconf = GPTConfig(**model_args)
     #print("WM Config: ", wm_mask, wm_decay_rate, wm_decay_type)
 
