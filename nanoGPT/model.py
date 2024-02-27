@@ -63,6 +63,7 @@ class CausalSelfAttention(nn.Module):
 
         if decay_type == 'linear':
             decay_values = torch.linspace(1, 0, n)
+
         #elif decay_type == 'exponential':
         #    decay_values = torch.arange(n, 0, -1, dtype=float) ** decay_factor
         #    decay_values/=torch.max(decay_values)

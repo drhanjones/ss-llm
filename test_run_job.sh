@@ -7,7 +7,14 @@
 #SBATCH --gpus-per-node=4
 #SBATCH --output=logs/%j.out
 #SBATCH --error=logs/%j.err
+#SBATCH --mail-type=BEGIN,END
+#SBATCH --mail-user=a.thamma@student.vu.nl
 #SBATCH -t 2:30:00
+
+# srun  --nodes=1 --partition=gpu --gpus-per-node=4 -t 0:5:00 --pty /bin/bash
+
+
+echo "Job $SLURM_JOBID started at `date`" | mail $USER -s "Job $SLURM_JOBID"
 
 echo $SLURM_JOB_ID
 

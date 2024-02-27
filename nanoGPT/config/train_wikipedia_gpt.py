@@ -8,9 +8,9 @@ dataset = 'wikipedia_bpe'
 wandb_log = True # disabled by default
 wandb_project = 'wikipedia'
 
-wm_mask = False
-wm_decay_rate = 10
-wm_decay_type = "exponential"
+wm_mask = True
+wm_decay_rate = 1
+wm_decay_type = "linear"
 
 
 if wm_mask:
