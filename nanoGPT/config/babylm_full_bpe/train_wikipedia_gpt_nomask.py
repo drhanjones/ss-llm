@@ -4,7 +4,7 @@ import time
 
 
 # wandb logging
-dataset = 'wikipedia_bpe'
+dataset = 'babylm_full_bpe'
 wandb_log = True # disabled by default
 wandb_project = 'wikipedia'
 
@@ -22,8 +22,9 @@ if wm_mask:
 else:
     mask_part = "nomask"
 
-out_dir = f'output_dump/out-{dataset}-{mask_part}'
-wandb_run_name = f'{dataset}_{mask_part}_gpt2'+ "run" + str(int(time.time()))
+unique_id = str(int(time.time()))
+out_dir = f'output_dump/out-{dataset}-{mask_part}-{unique_id}'
+wandb_run_name = f'{dataset}_{mask_part}_gpt2'+ "run" + unique_id
 
 
 #out_dir = 'out-wikipedia-char-mask'
