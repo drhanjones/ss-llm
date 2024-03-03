@@ -1,12 +1,15 @@
 # train a miniature character-level shakespeare model
 # good for debugging and playing on macbooks and such
-import time 
+import time
+import platform
 
 
 # wandb logging
 dataset = 'babylm_full_bpe'
 wandb_log = True # disabled by default
 wandb_project = 'wikipedia'
+sysname = "local" if "pop-os" in platform.node() else "server"
+
 
 wm_mask = False
 wm_decay_rate = 1
@@ -24,7 +27,7 @@ else:
 
 unique_id = str(int(time.time()))
 out_dir = f'output_dump/out-{dataset}-{mask_part}-{unique_id}'
-wandb_run_name = f'{dataset}_{mask_part}_gpt2'+ "run" + unique_id
+wandb_run_name = f'{dataset}_{mask_part}_gpt2_{sysname}_run_{unique_id}'
 
 
 #out_dir = 'out-wikipedia-char-mask'
