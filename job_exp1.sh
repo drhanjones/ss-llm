@@ -9,7 +9,7 @@
 #SBATCH --error=logs/%j.err
 #SBATCH --mail-type=BEGIN,END
 #SBATCH --mail-user=a.thamma@student.vu.nl
-#SBATCH -t 30:00
+#SBATCH -t 2:30:00
 
 # srun  --nodes=1 --partition=gpu --gpus-per-node=4 -t 0:5:00 --pty /bin/bash
 
