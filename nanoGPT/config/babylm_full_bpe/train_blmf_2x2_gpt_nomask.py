@@ -52,7 +52,7 @@ batch_size = 32  #64
 block_size = 128
 
 
-n_embd = 256
+n_embd = 128
 
 dropout = 0.1
 
