@@ -15,6 +15,9 @@ wm_mask = False
 wm_decay_rate = 1
 wm_decay_type = "linear"
 
+# baby GPT model :)
+n_layer = 4
+n_head = 4
 
 if wm_mask:
     mask_part = "mask_"
@@ -25,9 +28,11 @@ if wm_mask:
 else:
     mask_part = "nomask"
 
+lay_x_head = f'{n_layer}x{n_head}'
+
 unique_id = str(int(time.time()))
-out_dir = f'output_dump/out-{dataset}-{mask_part}-{unique_id}'
-wandb_run_name = f'{dataset}_{mask_part}_gpt2_{sysname}_run_{unique_id}'
+out_dir = f'output_dump/out-{dataset}-{lay_x_head}-{mask_part}-{unique_id}'
+wandb_run_name = f'{dataset}_{lay_x_head}_{mask_part}_gpt2_{sysname}_run_{unique_id}'
 
 
 #out_dir = 'out-wikipedia-char-mask'
@@ -46,9 +51,7 @@ gradient_accumulation_steps = 8
 batch_size = 32  #64
 block_size = 128
 
-# baby GPT model :)
-n_layer = 4
-n_head = 4
+
 n_embd = 256
 
 dropout = 0.1
