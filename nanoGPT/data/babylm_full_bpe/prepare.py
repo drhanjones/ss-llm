@@ -38,8 +38,8 @@ textfiles = [f"{dataset_folder_path}/{train_ds}/aochildes.train",
 
 
 if dataset_name == "full":
-    train_file_path = [ os.path.join(dataset_folder_path, train_ds, x) for x in os.listdir(os.path.join(dataset_folder_path, train_ds))]
-    dev_file_path = [ os.path.join(dataset_folder_path, dev_ds, x) for x in os.listdir(os.path.join(dataset_folder_path, dev_ds))]
+    train_file_path = [ os.path.join(dataset_folder_path, train_ds, x) for x in os.listdir(os.path.join(dataset_folder_path, train_ds)) if x.endswith(".train")]
+    dev_file_path = [ os.path.join(dataset_folder_path, dev_ds, x) for x in os.listdir(os.path.join(dataset_folder_path, dev_ds)) if x.endswith(".dev")]
 
 
 else:
@@ -50,6 +50,8 @@ else:
 
 train_data = ""
 for file in train_file_path:
+
+
     with open(file, 'r') as f:
         train_data += f.read()
 
