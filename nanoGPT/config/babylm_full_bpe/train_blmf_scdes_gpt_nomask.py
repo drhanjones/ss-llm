@@ -5,7 +5,7 @@ import platform
 import os
 
 # wandb logging
-dataset = 'babylm_full_bpe'
+dataset = 'babylm_wocdes_full_bpe'
 wandb_log = True # disabled by default
 wandb_project = 'wikipedia'
 sysname = "local" if "pop-os" in platform.node() else "server"
