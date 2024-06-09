@@ -5,7 +5,7 @@ import platform
 
 
 # wandb logging
-dataset = 'babylm_full_bpe'
+dataset = 'babylm_full_bpe_8k'
 wandb_log = True # disabled by default
 wandb_project = 'wikipedia'
 sysname = "local" if "pop-os" in platform.node() else "server"
@@ -16,8 +16,8 @@ wm_decay_rate = 1
 wm_decay_type = "linear"
 
 # baby GPT model :)
-n_layer = 2
-n_head = 2
+n_layer = 4
+n_head = 4
 
 if wm_mask:
     mask_part = "mask_"
@@ -34,19 +34,6 @@ unique_id = str(int(time.time()))
 out_dir = f'output_dump/out-{dataset}-{lay_x_head}-{mask_part}-{unique_id}'
 wandb_run_name = f'{dataset}_{lay_x_head}_{mask_part}_gpt2_{sysname}_run_{unique_id}'
 
-auto_blimp_eval = False
-
-if auto_blimp_eval:
-    #adding out_dir and data dir to shell for bash script to use
-
-    write_path = os.environ.get("HOME")
-    print("Setting up blimp eval and adding out_dir and data dir to shell for bash script to use")
-
-    with open(f"{write_path}/blimp_out_dir", "w") as f:
-        f.write(out_dir)
-
-    with open(f"{write_path}/blimp_data_dir", "w") as f:
-        f.write(dataset)
 
 #out_dir = 'out-wikipedia-char-mask'
 #wandb_run_name = 'wikipedia_char_mask_e500_gpt2'+ "run" + str(int(time.time()))
@@ -65,7 +52,7 @@ batch_size = 32  #64
 block_size = 128
 
 
-n_embd = 128
+n_embd = 256
 
 dropout = 0.1
 

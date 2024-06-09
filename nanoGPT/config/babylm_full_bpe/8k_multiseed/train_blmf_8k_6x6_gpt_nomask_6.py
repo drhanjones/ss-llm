@@ -2,22 +2,26 @@
 # good for debugging and playing on macbooks and such
 import time
 import platform
+import os
 
 
 # wandb logging
-dataset = 'babylm_full_bpe'
+dataset = 'babylm_full_bpe_8k'
 wandb_log = True # disabled by default
 wandb_project = 'wikipedia'
 sysname = "local" if "pop-os" in platform.node() else "server"
-
+runtype = "randomseed_test" # default or randomseed_test
+ 
+save_sample_to_file = True # if True, save a sample to file after each eval, overwrite in config
+sampling_frequency = 10000 # how often to sample from the model, overwrite in config
 
 wm_mask = False
 wm_decay_rate = 1
 wm_decay_type = "linear"
 
 # baby GPT model :)
-n_layer = 2
-n_head = 2
+n_layer = 6
+n_head = 6
 
 if wm_mask:
     mask_part = "mask_"
@@ -30,42 +34,31 @@ else:
 
 lay_x_head = f'{n_layer}x{n_head}'
 
-unique_id = str(int(time.time()))
+torch_seed_default = 404
+
+unique_id = os.environ.get("SLURM_JOB_ID", str(int(time.time()))) #Using SLURM_JOB_ID as unique id else use time#  #str(int(time.time()))
 out_dir = f'output_dump/out-{dataset}-{lay_x_head}-{mask_part}-{unique_id}'
 wandb_run_name = f'{dataset}_{lay_x_head}_{mask_part}_gpt2_{sysname}_run_{unique_id}'
 
-auto_blimp_eval = False
+if runtype == "randomseed_test":
+    wandb_run_name += f'_s{torch_seed_default}'
+    out_dir += f'_s{torch_seed_default}'
 
-if auto_blimp_eval:
-    #adding out_dir and data dir to shell for bash script to use
 
-    write_path = os.environ.get("HOME")
-    print("Setting up blimp eval and adding out_dir and data dir to shell for bash script to use")
-
-    with open(f"{write_path}/blimp_out_dir", "w") as f:
-        f.write(out_dir)
-
-    with open(f"{write_path}/blimp_data_dir", "w") as f:
-        f.write(dataset)
-
-#out_dir = 'out-wikipedia-char-mask'
-#wandb_run_name = 'wikipedia_char_mask_e500_gpt2'+ "run" + str(int(time.time()))
-
-#out_dir, wandb_run_name = get_save_name(dataset, wm_mask, wm_decay_rate, wm_decay_type)
 
 eval_interval = 250 # keep frequent because we'll overfit
 eval_iters = 200
 log_interval = 10 # don't print too too often
 
 # we expect to overfit on this small dataset, so only save when val improves
-always_save_checkpoint = False
+always_save_checkpoint = True
 
 gradient_accumulation_steps = 8
 batch_size = 32  #64
-block_size = 128
+block_size = 256
 
 
-n_embd = 128
+n_embd = 384
 
 dropout = 0.1
 
@@ -84,7 +77,7 @@ weight_decay = 1e-1
 # device = 'cpu'  # run on cpu only
 # compile = False # do not torch compile the model
 
-#$ python train.py config/train_shakespeare_char_test.py
+
 
 
 

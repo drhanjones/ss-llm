@@ -7,3 +7,7 @@ eval_only = True
 wandb_log = False
 init_from = 'gpt2'
 
+dataset = 'shakespeare'
+
+out_dir = 'output_dump/GPT_eval_test'
+

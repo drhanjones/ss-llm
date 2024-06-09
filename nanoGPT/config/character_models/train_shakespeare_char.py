@@ -13,10 +13,18 @@ wandb_log = False # override via command line if you like
 wandb_project = 'shakespeare-char'
 wandb_run_name = 'mini-gpt'
 
+
+wm_mask = True
+wm_decay_rate = 1
+wm_decay_type = "linear"
+wm_decay_length = 256
+wm_setting_type = "new" # new or old
+
+
 dataset = 'shakespeare_char'
 gradient_accumulation_steps = 1
-batch_size = 64
-block_size = 256 # context of up to 256 previous characters
+batch_size = 10
+block_size = 7 # context of up to 256 previous characters
 
 # baby GPT model :)
 n_layer = 6
