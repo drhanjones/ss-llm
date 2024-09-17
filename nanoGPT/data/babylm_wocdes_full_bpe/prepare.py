@@ -99,6 +99,7 @@ def encode_with_tokenizer(data, textfiles,  tokenizer_type = "customBPE", vocab_
             tokenizer.train(files=textfiles, trainer=trainer)
 
             tokenizer.post_processor = processors.ByteLevel(trim_offsets=True)
+            tokenizer.decoder = decoders.ByteLevel()
 
             # Save the tokenizer
             wrapped_tokenizer = PreTrainedTokenizerFast(

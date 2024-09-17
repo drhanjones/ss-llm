@@ -105,7 +105,6 @@ def encode_with_tokenizer(data, textfiles,  tokenizer_type = "customBPE", vocab_
             tokenizer.train(files=textfiles, trainer=trainer)
 
             tokenizer.post_processor = processors.ByteLevel(trim_offsets=True)
-            tokenizer.decoder = decoders.ByteLevel()
 
             # Save the tokenizer
             wrapped_tokenizer = PreTrainedTokenizerFast(
@@ -133,8 +132,8 @@ def encode_with_tokenizer(data, textfiles,  tokenizer_type = "customBPE", vocab_
 
 
 # encode with tiktoken gpt2 bpe
-train_ids = encode_with_tokenizer(train_data, textfiles, tokenizer_type = "customBPE", vocab_size = 8000)
-val_ids = encode_with_tokenizer(val_data, textfiles, tokenizer_type =  "customBPE", vocab_size = 8000)
+train_ids = encode_with_tokenizer(train_data, textfiles, tokenizer_type = "gpt2", vocab_size = 16000)
+val_ids = encode_with_tokenizer(val_data, textfiles, tokenizer_type =  "gpt2", vocab_size = 16000)
 
 print(f"train has {len(train_ids):,} tokens")
 print(f"val has {len(val_ids):,} tokens")
@@ -166,8 +165,8 @@ with open(os.path.join(os.path.dirname(__file__), 'meta.pkl'), 'wb') as f:
 # train has 13,636,233 tokens
 # val has 13,077,391 tokens
 
-#When using full data of babylm with custom BPE tokenizer and 8000 vocab size
+#When using full data of babylm with GPT tokenizer
 
-# Tokenizer vocab size: 8000
-# train has 14,545,185 tokens
-# val has 13,921,894 tokens
+
+# train has 14,470,879 tokens
+# val has 13,842,846 tokens

@@ -48,26 +48,31 @@ else:
 
 #read all the files from the list of paths given
 
-train_data = ""
+train_data = []
 for file in train_file_path:
-
+    t_file = ""
 
     with open(file, 'r') as f:
-        train_data += f.read()
+        t_file += f.read()
 
         #Add new line to the end of each file
 
-        train_data += "\n"
+        t_file += "\n"
 
-val_data = ""
+    train_data.append(t_file)
+
+val_data = []
 
 for file in dev_file_path:
+    v_file = ""
     with open(file, 'r') as f:
-        val_data += f.read()
+        v_file += f.read()
 
         #Add new line to the end of each file
 
-        val_data += "\n"
+        v_file += "\n"
+
+    val_data.append(v_file)
 
 
 # with open(train_file_path, 'r') as f:
@@ -118,10 +123,20 @@ def encode_with_tokenizer(data, textfiles,  tokenizer_type = "customBPE", vocab_
             tokenizer = AutoTokenizer.from_pretrained(Path(__file__).parents[0])
 
         else:
+            print("Tokenizer already exists. Loading from file...")
             tokenizer = AutoTokenizer.from_pretrained(Path(__file__).parents[0])
 
-        print("Tokenizer vocab size:", tokenizer.vocab_size)
-        data_ids = tokenizer.encode(data)
+        #print("Tokenizer vocab size:", tokenizer.vocab_size)
+        #print("Tokenizer:", tokenizer)
+        #return
+        print("Encoding data with tokenizer...")
+        #data_ids = tokenizer.encode(data)
+        #data_ids = tokenizer.encode(data)
+        data_ids = np.concatenate(tokenizer(data, return_tensors="np")["input_ids"])
+        print(data_ids[:10])
+        print(type(data_ids), type(data_ids[0]))
+        print("shape of data_ids:", data_ids.shape)
+        print("Encoding done.")
         meta["vocab_size"] = tokenizer.vocab_size
 
     elif tokenizer_type == "gpt2":
@@ -131,10 +146,19 @@ def encode_with_tokenizer(data, textfiles,  tokenizer_type = "customBPE", vocab_
 
     return data_ids
 
-
+print("Encoding train and val data...")
+#print("Sample train data:", repr(train_data[:1500]))
+#print("Sample val data:", repr(val_data[500:1500]))
+import time
 # encode with tiktoken gpt2 bpe
+start = time.time()
 train_ids = encode_with_tokenizer(train_data, textfiles, tokenizer_type = "customBPE", vocab_size = 8000)
+print("Time taken to encode train data:", time.time() - start)
+
+start = time.time()
 val_ids = encode_with_tokenizer(val_data, textfiles, tokenizer_type =  "customBPE", vocab_size = 8000)
+print("Time taken to encode val data:", time.time() - start)
+
 
 print(f"train has {len(train_ids):,} tokens")
 print(f"val has {len(val_ids):,} tokens")
