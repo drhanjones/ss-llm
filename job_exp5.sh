@@ -2,21 +2,19 @@
 
 #SBATCH --job-name=ss-llm
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=4
+#SBATCH --ntasks-per-node=1
 #SBATCH --partition=gpu
 #SBATCH --gpus-per-node=4
 #SBATCH --output=logs/%j.out
 #SBATCH --error=logs/%j.err
 #SBATCH --mail-type=BEGIN,END
 #SBATCH --mail-user=a.thamma@student.vu.nl
-#SBATCH -t 4:15:00
+#SBATCH -t 3:30:00
 
 # srun  --nodes=1 --partition=gpu --gpus-per-node=4 -t 0:5:00 --pty /bin/bash
 
 # sbatch --export=config_file_name=wikipedia_bpe/train_wikipedia_gpt_exp2.py test_run_job.sh
 
-#https://github.com/PrincetonUniversity/multi_gpu_training/tree/main/02_pytorch_ddp  - Some github repo from princeton
-#for multi gpu training under slurm with torchrun
 
 echo "Job $SLURM_JOBID started at `date`" | mail $USER -s "Job $SLURM_JOBID"
 
