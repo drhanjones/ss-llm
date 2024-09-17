@@ -11,7 +11,7 @@ import math
 import inspect
 import time
 from dataclasses import dataclass
-
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -32,10 +32,19 @@ class CausalSelfAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
         assert config.n_embd % config.n_head == 0
-        # key, query, value projections for all heads, but in a batch
-        self.c_attn = nn.Linear(config.n_embd, 3 * config.n_embd, bias=config.bias)
+        #print(config)
+
+        assert config.head_size_qkv % config.n_head == 0 #started explicitly passing head_size_qkv
+
+        self.head_size_qkv = config.head_size_qkv
+        ## key, query, value projections for all heads, but in a batch
+        #self.c_attn = nn.Linear(config.n_embd, 3 * config.n_embd, bias=config.bias)
+        self.c_attn = nn.Linear(config.n_embd, 3 * self.head_size_qkv, bias=config.bias)
+        #breakpoint()
+
         # output projection
-        self.c_proj = nn.Linear(config.n_embd, config.n_embd, bias=config.bias)
+        #self.c_proj = nn.Linear(config.n_embd, config.n_embd, bias=config.bias)
+        self.c_proj = nn.Linear(self.head_size_qkv, config.n_embd, bias=config.bias)
         # regularization
         self.attn_dropout = nn.Dropout(config.dropout)
         self.resid_dropout = nn.Dropout(config.dropout)
@@ -45,8 +54,11 @@ class CausalSelfAttention(nn.Module):
         #self.wm_config = config.wmconfig
 
         self.wm_mask = config.wm_mask
+        self.wm_decay_length = config.wm_decay_length
         self.wm_decay_rate = config.wm_decay_rate
         self.wm_decay_type = config.wm_decay_type
+        self.wm_decay_echoic_memory = config.wm_decay_echoic_memory
+        self.wm_setting_type = config.wm_setting_type
         
         # flash attention make GPU go brrrrr but support is only in PyTorch >= 2.0
         self.flash = hasattr(torch.nn.functional, 'scaled_dot_product_attention')
@@ -54,15 +66,31 @@ class CausalSelfAttention(nn.Module):
             print("Setting flash to False because wm_mask is enabled")
             self.flash = False # disable for now to test manually implemented attention with mask
         if not self.flash:
-            print("WARNING: using slow attention. Flash Attention requires PyTorch >= 2.0")
+            #print("WARNING: using slow attention. Flash Attention requires PyTorch >= 2.0")
             # causal mask to ensure that attention is only applied to the left in the input sequence
             self.register_buffer("bias", torch.tril(torch.ones(config.block_size, config.block_size))
                                         .view(1, 1, config.block_size, config.block_size))
 
-    def get_decay_weight_matrix(self, n, decay_factor=None, decay_type=None):
+    def get_decay_weight_matrix(self, n, decay_length, decay_factor=None, decay_type=None, decay_echoic_memory=1):
+
+        """
+        Get a decay weight matrix for a given context window size n.
+        :param n: Context window size for the decay matrix
+        :param decay_length: Actual length over which decay happens (usually is supposed to be equal to or greater than n)
+        :param decay_factor: Decay factor for the decay matrix, analogous to weight of the decay
+        :param decay_type: Type of decay to apply to the matrix #linear, exponential, inverse_sigmoid, custom_logistic
+        :param decay_echoic_memory: Echoic memory for the decay matrix, first n values where "effect of decay" is not applied, where memory is supposedly perfect
+        :return:
+        """
 
         if decay_type == 'linear':
-            decay_values = torch.linspace(1, 0, n)
+            decay_length = decay_length - decay_echoic_memory+1
+            decay_values = torch.linspace(1, 0, decay_length)
+            decay_values = torch.cat((torch.ones(decay_echoic_memory-1), decay_values))
+            decay_length = decay_length+decay_echoic_memory-1
+            if decay_length != n:
+                assert decay_length > n  #n is context window size and ideally we want decay length to be larger because we are going to cut it off
+                decay_values = decay_values[:n] #Cut off the decay values to the context window size
 
         #elif decay_type == 'exponential':
         #    decay_values = torch.arange(n, 0, -1, dtype=float) ** decay_factor
@@ -70,8 +98,67 @@ class CausalSelfAttention(nn.Module):
         # elif decay_type == 'logarithmic':
         #     decay_values = torch.log(torch.arange(n, 0, -1) + 1)
         elif decay_type == 'exponential':
-            nums = torch.linspace(0, 1, n)
+            decay_length = decay_length - decay_echoic_memory + 1
+            nums = torch.linspace(0, 1, decay_length)
             decay_values = torch.exp(-nums * decay_factor)
+            decay_values = torch.cat((torch.ones(decay_echoic_memory-1), decay_values))
+            decay_length = decay_length+decay_echoic_memory-1
+            if decay_length != n:
+                assert decay_length > n
+                decay_values = decay_values[:n]
+
+        elif decay_type == "inverse_sigmoid":
+            decay_length = decay_length - decay_echoic_memory + 1
+            nums = torch.linspace(10, -10, decay_length) #assuming hardcoded range between 10 and -10 for now
+            decay_values = 1/(1+torch.exp(-decay_factor*nums))
+            decay_values = torch.cat((torch.ones(decay_echoic_memory-1), decay_values))
+            decay_length = decay_length+decay_echoic_memory-1
+            #Uncomment below line if we want values to be scaled to 1-0 instead of close to 1 and 0 as sigmoid intends
+            #decay_values = (decay_values - torch.min(decay_values)) / (torch.max(decay_values) - torch.min(decay_values))
+
+            if decay_length != n:
+                assert decay_length > n
+                decay_values = decay_values[:n]
+
+        elif decay_type == "logarithmic":
+            decay_length = decay_length - decay_echoic_memory + 1
+            nums = torch.linspace(0, 1, decay_length)
+            decay_values = 1 - torch.pow(nums, np.e * decay_factor)
+            decay_values = torch.cat((torch.ones(decay_echoic_memory - 1), decay_values))
+            decay_length = decay_length + decay_echoic_memory - 1
+            if decay_length != n:
+                assert decay_length > n
+                decay_values = decay_values[:n]
+
+        elif decay_type == "exponential_2":
+            decay_length = decay_length - decay_echoic_memory + 1
+            nums = torch.linspace(0, 1, decay_length)
+            decay_values = 1 - torch.pow(nums, 1 / (np.e * decay_factor))
+            decay_values = torch.cat((torch.ones(decay_echoic_memory - 1), decay_values))
+            decay_length = decay_length + decay_echoic_memory - 1
+
+            if decay_length != n:
+                assert decay_length > n
+                decay_values = decay_values[:n]
+
+        elif decay_type == "custom_logistic":
+            A = 0  # Lower asymptote
+            K = 1  # Upper asymptote
+            B = 0.8  # Growth rate
+            Q = 125  # Related to value at x=0
+            nu = 4  # Shape parameter
+            M = 4  # Inflection point (time of max growth)
+
+            decay_length = decay_length - decay_echoic_memory + 1
+            x = torch.linspace(-10, 14.5, decay_length)
+            decay_values = A + (K - A) / (1 + Q * torch.exp(-B * (x - M))) ** (1 / nu)
+            decay_values = torch.flip(decay_values, [0])
+            decay_values = torch.cat((torch.ones(decay_echoic_memory-1), decay_values))
+            decay_length = decay_length+decay_echoic_memory-1
+            if decay_length != n:
+                assert decay_length > n
+                decay_values = decay_values[:n]
+
         # Apply the decay values to the lower triangle
 
         indices = torch.arange(n)[:, None] - torch.arange(n)
@@ -79,20 +166,29 @@ class CausalSelfAttention(nn.Module):
         lower_triangle = lower_triangle.float()
 
         return lower_triangle
-    
+
     def forward(self, x):
         # batch size, sequence length, embedding dimensionality (n_embd)
         # B is batch size, T is sequence length, C is embedding dimensionality
         B, T, C = x.size()
-
+        # print("X size: ", x.size())
+        # print("B, T, C: ", B, T, C)
         # calculate query, key, values for all heads in batch and move head forward to be the batch dim
         # Calculate where k,q,v for each batch for each head is of the size T,Hs where Hs = C // n_head
+        #Hs is the size of the head
+        #breakpoint()
+        #q, k, v  = self.c_attn(x).split(self.n_embd, dim=2)
+        q, k, v = self.c_attn(x).split(self.head_size_qkv, dim=2) # (B, T, 3*hs) -> 3 * (B, T, hs)
 
-        q, k, v  = self.c_attn(x).split(self.n_embd, dim=2)
-        k = k.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
-        q = q.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
-        v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
+        # k = k.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
+        # q = q.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
+        # v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
+        k = k.view(B, T, self.n_head, self.head_size_qkv // self.n_head).transpose(1, 2)  # (B, nh, T, hs)
+        q = q.view(B, T, self.n_head, self.head_size_qkv // self.n_head).transpose(1, 2)  # (B, nh, T, hs)
+        v = v.view(B, T, self.n_head, self.head_size_qkv // self.n_head).transpose(1, 2)  # (B, nh, T, hs)
 
+
+        #breakpoint()
         # causal self-attention; Self-attend: (B, nh, T, hs) x (B, nh, hs, T) -> (B, nh, T, T) (nh = number of heads, hs = head size)
         if self.flash:
             # efficient attention using Flash Attention CUDA kernels
@@ -105,28 +201,39 @@ class CausalSelfAttention(nn.Module):
 
         else:
             # manual implementation of attention
-            att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
+
+            att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1))) #Att shape: (B, nh, T, T) ?
+
+            if self.wm_setting_type == "new":
+                # Running mask on output of q @ k^T/ sqrt(d_k) before the softmax and upper triangular mask
+                #because in the other scenario (masking output of softmax) output of mask does not sum to 1, as is expected in softmax
+                if self.wm_mask:
+                    wm_mask = self.get_decay_weight_matrix(T, self.wm_decay_length, decay_factor=self.wm_decay_rate,
+                                                           decay_type=self.wm_decay_type, decay_echoic_memory=self.wm_decay_echoic_memory).to(x.device)
+                    assert att.shape[-2:] == wm_mask.shape[-2:]
+                    #before we multiply, lets make all values are greater than 0,  so we need to find the minimum value for each row and add that to all values
+                    #min_vals = torch.min(att, dim=-1)[0]
+                    #min_vals = min_vals.unsqueeze(-1)
+                    #att = att - min_vals
+                    att = att * wm_mask
+                    #Now we need to add the min_vals back to the att matrix
+                    #att = att + min_vals
+
             att = att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
             att = F.softmax(att, dim=-1)
             att = self.attn_dropout(att)
 
-            
-            if self.wm_mask:
-                wm_mask = self.get_decay_weight_matrix(T, decay_factor=self.wm_decay_rate, decay_type=self.wm_decay_type).to(x.device)
-                #print(att.shape[-2:]==wm_mask.shape[-2:])
-                assert att.shape[-2:]==wm_mask.shape[-2:]
-                #print("h13",att.shape, wm_mask.shape)
+            if self.wm_setting_type == "old":
+                if self.wm_mask:
+                    wm_mask = self.get_decay_weight_matrix(T, self.wm_decay_length, decay_factor=self.wm_decay_rate, decay_type=self.wm_decay_type,
+                                                           decay_echoic_memory=self.wm_decay_echoic_memory).to(x.device)
+                    assert att.shape[-2:]==wm_mask.shape[-2:]
 
-                #print(att.type(), wm_mask.type())
-                #print("H1, att: ", att[0,0,-1,-15:])
-                #print("H4, wm_mask: ", wm_mask[-1,-15:])
-                att = att * wm_mask
-                #print("H5, att: ", att[0,0,-1,-15:])
-                #time.sleep(25)
-            
+                    att = att * wm_mask
+
             y = att @ v # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
-        y = y.transpose(1, 2).contiguous().view(B, T, C) # re-assemble all head outputs side by side
-
+        #y = y.transpose(1, 2).contiguous().view(B, T, C) # re-assemble all head outputs side by side
+        y = y.transpose(1, 2).contiguous().view(B, T, self.head_size_qkv) # re-assemble all head outputs side by side
         # output projection
         y = self.resid_dropout(self.c_proj(y))
         return y
@@ -135,9 +242,14 @@ class MLP(nn.Module):
 
     def __init__(self, config):
         super().__init__()
-        self.c_fc    = nn.Linear(config.n_embd, 4 * config.n_embd, bias=config.bias)
+        #self.c_fc    = nn.Linear(config.n_embd, 4 * config.n_embd, bias=config.bias)
+        self.c_fc    = nn.Linear(config.n_embd, config.ffw_dim, bias=config.bias)
+
         self.gelu    = nn.GELU()
-        self.c_proj  = nn.Linear(4 * config.n_embd, config.n_embd, bias=config.bias)
+
+        #self.c_proj  = nn.Linear(4 * config.n_embd, config.n_embd, bias=config.bias)
+        self.c_proj  = nn.Linear(config.ffw_dim, config.n_embd, bias=config.bias)
+
         self.dropout = nn.Dropout(config.dropout)
 
     def forward(self, x):
@@ -179,9 +291,15 @@ class GPTConfig:
     #wm_mask: bool = False # True: add decreasing weight to output, False: no mask
     #wmconfig: WMConfig = WMConfig()    
 
+    head_size_qkv: int = None
+    ffw_dim: int = None
+
     wm_mask: bool = False
+    wm_decay_length: int = 1024
     wm_decay_rate: int = 1
     wm_decay_type: str = "linear"
+    wm_decay_echoic_memory: int = 1
+    wm_setting_type: str = "old" # old or new
 
 
 
@@ -217,6 +335,7 @@ class GPT(nn.Module):
 
         # report number of parameters
         print("number of parameters: %.2fM" % (self.get_num_params()/1e6,))
+        #breakpoint()
         #Sleep to allow user to cancel if model is too large
         #time.sleep(25)
 
@@ -227,9 +346,14 @@ class GPT(nn.Module):
         The token embeddings would too, except due to the parameter sharing these
         params are actually used as weights in the final layer, so we include them.
         """
+
+        def test_count_parameters(module):
+            return sum(p.numel() for p in module.parameters() if p.requires_grad)
+
         n_params = sum(p.numel() for p in self.parameters())
         if non_embedding:
             n_params -= self.transformer.wpe.weight.numel()
+        #breakpoint()
         return n_params
 
     def _init_weights(self, module):
@@ -241,9 +365,11 @@ class GPT(nn.Module):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
     def forward(self, idx, targets=None):
+
         device = idx.device
         b, t = idx.size()
-        assert t <= self.config.block_size, f"Cannot forward sequence of length {t}, block size is only {self.config.block_size}"
+        assert t <= self.config.block_size, (f"Cannot "
+                                             f" sequence of length {t}, block size is only {self.config.block_size}")
         pos = torch.arange(0, t, dtype=torch.long, device=device) # shape (t)
 
         # forward the GPT model itself
@@ -253,10 +379,12 @@ class GPT(nn.Module):
         for block in self.transformer.h:
             x = block(x)
         x = self.transformer.ln_f(x)
-
+        #breakpoint()
         if targets is not None:
+
             # if we are given some desired targets also calculate the loss
             logits = self.lm_head(x)
+
             loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1)
         else:
             # inference-time mini-optimization: only forward the lm_head on the very last position
@@ -348,6 +476,7 @@ class GPT(nn.Module):
         ]
         num_decay_params = sum(p.numel() for p in decay_params)
         num_nodecay_params = sum(p.numel() for p in nodecay_params)
+        #breakpoint()
         print(f"num decayed parameter tensors: {len(decay_params)}, with {num_decay_params:,} parameters")
         print(f"num non-decayed parameter tensors: {len(nodecay_params)}, with {num_nodecay_params:,} parameters")
         # Create AdamW optimizer and use the fused version if it is available
@@ -376,12 +505,15 @@ class GPT(nn.Module):
         return mfu
 
     @torch.no_grad()
-    def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None):
+    def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None, do_sample=True):
         """
         Take a conditioning sequence of indices idx (LongTensor of shape (b,t)) and complete
         the sequence max_new_tokens times, feeding the predictions back into the model each time.
         Most likely you'll want to make sure to be in model.eval() mode of operation for this.
         """
+
+        #Enable better batch decoding but until then loop through each sequenc
+
         for _ in range(max_new_tokens):
             # if the sequence context is growing too long we must crop it at block_size
             idx_cond = idx if idx.size(1) <= self.config.block_size else idx[:, -self.config.block_size:]
@@ -395,8 +527,16 @@ class GPT(nn.Module):
                 logits[logits < v[:, [-1]]] = -float('Inf')
             # apply softmax to convert logits to (normalized) probabilities
             probs = F.softmax(logits, dim=-1)
-            # sample from the distribution
-            idx_next = torch.multinomial(probs, num_samples=1)
+            if do_sample:
+                # sample from the distribution
+                idx_next = torch.multinomial(probs, num_samples=1)
+            else:
+                print("test1")
+                print("probs: ", probs)
+                # Added option to do greedy decoding instead of sampling because evaluation needs it for some reason
+                #Defaults do_sample to True though so it should be fine
+                #Greedy decoding
+                idx_next = torch.argmax(probs, dim=-1, keepdim=True)
             # append sampled index to the running sequence and continue
             idx = torch.cat((idx, idx_next), dim=1)
 
