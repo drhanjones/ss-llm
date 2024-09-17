@@ -9,7 +9,7 @@ from contextlib import nullcontext
 def sample_from_model(model, data_dir, out_dir,
                       dtype, device = 'cuda',
                       num_samples=2, temperature=0.8,
-                      max_new_tokens=50, top_k=200,
+                      max_new_tokens=75, top_k=200,
                       prompt_type = "text", start_text="",
                       iter_num = None):
     
@@ -43,7 +43,7 @@ def sample_from_model(model, data_dir, out_dir,
         if meta.get("custom_tokenizer", False):
             custom_tokenizer = AutoTokenizer.from_pretrained(data_dir, use_fast=False)
             encode = lambda s: custom_tokenizer.encode(s)
-            decode = lambda l: "".join(custom_tokenizer.decode(l).split("Ġ"))
+            decode = lambda l: custom_tokenizer.decode(l)
         else:
             if meta.get("stoi", False):
                 stoi, itos = meta['stoi'], meta['itos']
@@ -68,7 +68,7 @@ def sample_from_model(model, data_dir, out_dir,
             "directed_speech": "He said,",
             "conversation": "A: Hello, B: Hi,",
             "news_article": "Breaking News: Scientists have discovered",
-            "knowledge_base": "The fact is,",
+            "knowledge_base": "The capital of ",
             "poetry": "Roses are red,",
         }
         prompt_list = [(k, v) for k, v in prompt_cats.items()]
