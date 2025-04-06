@@ -1,0 +1,182 @@
+---
+title: "reading_time_analysis_summary"
+author: "Abishek Thamma"
+date: "2024-10-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Reading Time Analysis (Baseline)
+
+Had to move to R because the statsmodels package in Python wasn't working (ran for far too long), pymer4 wasn't working either.
+
+```{r load_packages}
+library(DBI)
+library(lme4)
+library(DT)
+```
+
+```{r reading_data}
+RESULTS_DB_PATH <- "/home/abishekthamma/PycharmProjects/masters_thesis/ss-llm/nanoGPT/results/results.db"
+results_db <- dbConnect(RSQLite::SQLite(), RESULTS_DB_PATH)
+
+baseline_df <- dbGetQuery(results_db,"SELECT SPRTNaturalStories.RTUID, 
+SPRTNaturalStories.WorkerID, 
+SPRTNaturalStories.StoryWordID, 
+SPRTNaturalStories.RT, 
+WordDetails.Word as WordCategory, 
+WordDetails.CharacterLength, 
+WordDetails.WordUID as WordCategoryID,
+WordDetails.LogFrequencies as LogFrequencies,
+Story.POSTag as POSTag
+FROM SPRTNaturalStories 
+JOIN Story on SPRTNaturalStories.StoryWordID = Story.StoryWordID 
+JOIN WordDetails on WordDetails.WordUID = Story.WordUID 
+")
+
+print.data.frame(baseline_df[1:5,])
+```
+
+One clear difference is that they remove data for words that are first and last words of each sentence. In this, I have not done that.
+
+```{r}
+
+baseline_df$LogRT <- log(baseline_df$RT)
+
+baseline_df$WorkerID <- as.factor(baseline_df$WorkerID)
+baseline_df$WordCategoryID <- as.factor(baseline_df$WordCategoryID)
+baseline_df$POSTag <- as.factor(baseline_df$POSTag)
+baseline_df$CharacterLength_c <- scale(baseline_df$CharacterLength)
+
+#Should I scale Log Frequencies(?)
+baseline_df$LogFrequencies_c <- scale(baseline_df$LogFrequencies)
+print.data.frame(baseline_df[1:5,])
+```
+
+Taking 50% of observations randomly
+
+```{r}
+
+exp_index <- sample(1:nrow(baseline_df), nrow(baseline_df)*0.5)
+
+baseline_df$exp <- 0
+baseline_df$exp[exp_index] <- 1
+baseline_df$exp <- as.factor(baseline_df$exp)
+
+exploratory_df <- baseline_df[baseline_df$exp == 1,]
+test_df <- baseline_df[baseline_df$exp == 0,]
+
+
+```
+
+The paper says - "LME models included by-subject random slopes for all fixed effects as well as random intercepts for each subject and each word type"
+
+Also - "a random intercept for each subject-sentence interaction was included" (ignoring this for now because we are not looking at data at a sentence level)
+
+#Predictors for iteration 1 - word length in characters (scaled)
+
+Not entirely sure on how to interpret "word type". Going by your assumption, assumed POS Tag and tested (but paper doesn't mention anything about POS Tag until much later, and in post hoc analysis section)
+
+Assuming word type means "word itself"
+
+```{r}
+start.time <- Sys.time()
+fit_formula <- "LogRT ~ 1  + ( 1 | WorkerID) + (1 | WordCategoryID)"
+fit <- lmer(fit_formula, data=exploratory_df, REML=F)
+summary(fit)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+
+```
+
+Assuming it means POS Tag (Used NLTK Universal tag set)
+
+```{r}
+start.time <- Sys.time()
+fit_formula_b <- "LogRT ~ 1  + ( 1 | WorkerID) + (1 | POSTag)"
+fit_b <- lmer(fit_formula_b, data=exploratory_df, REML=F)
+summary(fit_b)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+
+```
+
+Step 2 - Tried to add Character Length as a predictor
+
+```{r}
+
+start.time <- Sys.time()
+
+fit_formula_2 <- "LogRT ~ CharacterLength_c + (1 + CharacterLength_c | WorkerID) + (1 | WordCategoryID)"    
+fit_2 <- lmer(fit_formula_2, data=exploratory_df, REML=F)
+summary(fit_2)
+
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+```
+
+```{r}
+
+start.time <- Sys.time()
+
+fit_formula_3 <- "LogRT ~ CharacterLength_c + (1 + CharacterLength_c | WorkerID) + (1 | POSTag) "
+fit_3 <- lmer(fit_formula_3, data=exploratory_df, REML=F) 
+summary(fit_3)
+
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+```
+
+Step 3 - Add Subtlex Frequencies as a predictor fixed effects and also by subject
+
+```{r}
+start.time <- Sys.time()
+
+fit_formula_6 <- "LogRT ~ CharacterLength_c + LogFrequencies_c + (1 + CharacterLength_c + LogFrequencies_c | WorkerID) + (1 | POSTag)"    
+fit_6 <- lmer(fit_formula_6, data=exploratory_df, REML=F)
+summary(fit_6)
+
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+```
+
+Step 4 of trying to fit using only subtlex log frequencies and not character length
+
+```{r}
+
+start.time <- Sys.time()
+
+fit_formula_7 <- "LogRT ~ LogFrequencies_c + (1 + LogFrequencies_c | WorkerID) + (1 | POSTag)"    
+fit_7 <- lmer(fit_formula_7, data=exploratory_df, REML=F)
+summary(fit_7)
+
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+```
+
+Step 5 - Test original idea of just subtlex frequencies
+
+```{r}
+
+start.time <- Sys.time()
+
+fit_formula_8 <- "LogRT ~ LogFrequencies_c + (1 + LogFrequencies_c | WorkerID)"    
+fit_8 <- lmer(fit_formula_8, data=exploratory_df, REML=F)
+summary(fit_8)
+
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+
+time.taken
+```
+
+I would think, some of the simpler sanity checks I can think of and they seem to make sense, like the LogFrequencies have a negative coefficient

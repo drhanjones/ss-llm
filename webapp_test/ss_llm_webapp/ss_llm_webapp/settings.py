@@ -11,10 +11,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
-
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+RESULTS_DIR = '/home/abishekthamma/PycharmProjects/masters_thesis/ss-llm/nanoGPT/results'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'model_manage',
 ]
 
 MIDDLEWARE = [
@@ -78,8 +79,14 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
-    }
+    },
+    "model_results": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(RESULTS_DIR, 'results.db'),
+    },
 }
+
+DATABASE_ROUTERS = ['model_manage.routers.ModelDBRouter']
 
 
 # Password validation

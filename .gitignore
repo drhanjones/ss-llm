@@ -165,3 +165,20 @@ cython_debug/
 *.pyc
 
 wandb/
+.Rproj.user
+
+*.Rhistory
+*.Rproj
+*.Ruserdata
+*.RData
+
+TinyStories
+repl_repos
+logs
+babylm_data
+webapp_test/ss_llm_webapp
+webapp_test/streamlit_test
+
+nanoGPT/eval/reading_time_analysis/reading_time_surprisal_files
+results.db
+*lock*

@@ -9,8 +9,11 @@
 #SBATCH --error=logs/%j.err
 #SBATCH --mail-type=BEGIN,END
 #SBATCH --mail-user=a.thamma@student.vu.nl
-#SBATCH -t 4:15:00
+#SBATCH -t 6:45:00
 
+
+# time for 12x12 - 6:30:00 (Save for later)
+# time for 6x6 - 45:00
 # srun  --nodes=1 --partition=gpu --gpus-per-node=4 -t 0:5:00 --pty /bin/bash
 
 # sbatch --export=config_file_name=wikipedia_bpe/train_wikipedia_gpt_exp2.py test_run_job.sh

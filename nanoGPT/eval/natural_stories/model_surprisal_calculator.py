@@ -67,17 +67,8 @@ if __name__ == "__main__":
     read_path = "storyword_model_surprisals.csv"
     surprisal_key_df = pd.read_csv("story_surprisal_keys.csv")
 
-    model_list = ['out-babylm_full_bpe_8k-6x6-mask_log001-6617787',
- 'out-babylm_full_bpe_8k-6x6-nomask-curr_log-7047459_s42',
- 'out-babylm_full_bpe_8k-6x6-nomask-curr_log-7047460_s2347',
- 'out-babylm_full_bpe_8k-6x6-nomask-curr_log-7047461_s9',
- 'out-babylm_full_bpe_8k-6x6-nomask-curr_log-7047462_s616',
- 'out-babylm_full_bpe_8k-6x6-nomask-curr_log-7047464_s46674',
- 'out-babylm_full_bpe_8k-6x6-nomask-curr_log-7047466_s6747',
- 'out-babylm_full_bpe_8k-6x6-nomask-curr_log-7047467_s869',
- 'out-babylm_full_bpe_8k-6x6-nomask-curr_log-7047468_s466',
- 'out-babylm_full_bpe_8k-6x6-nomask-curr_log-7047469_s11111']
-
+    model_list = ['out-babylm_full_bpe_100M_8k-6x6-nomask-8569444',
+ 'out-babylm_full_bpe_100M_8k-6x6-mask_ee002_em10-8569446']
     #data_folder_list = []
 
 
@@ -93,6 +84,8 @@ if __name__ == "__main__":
                 data_folder = r'babylm_full_bpe_8k'
             elif "wocdes" in model_name:
                 data_folder = r'babylm_wocdes_full_bpe'
+            elif "babylm_full_bpe_100M_8k" in model_name:
+                data_folder = r'babylm_full_bpe_100M_8k'
             else:
                 data_folder = r'babylm_full_bpe'
             try:
@@ -103,6 +96,7 @@ if __name__ == "__main__":
                 story_surprisals_df_int["model_id"] = convert_modelname_to_id(model_name)
                 story_surprisals_df_int = story_surprisals_df_int[["model_id", "storyword_UID", "surprisal"]]
                 story_surprisals_df_read = pd.concat([story_surprisals_df_read, story_surprisals_df_int])
+
             except Exception as e:
                 print(f"Error processing model {model_name}")
                 print(e)

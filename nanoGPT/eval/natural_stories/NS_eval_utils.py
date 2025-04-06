@@ -134,6 +134,7 @@ def load_RT_data(rt_root=r'naturalstories_RTS'):
     pr_RTs = pr_RTs.sort_values(by=['item', 'WorkerId', 'zone'])
 
     pr_wi = pd.read_csv(os.path.join(rt_root, 'processed_wordinfo.tsv'), sep='\t')
+    pr_wi.columns = [colname.strip() for colname in pr_wi.columns]
     pr_wi = pr_wi.sort_values(by=['item', 'zone'])
 
     all_st = pd.read_csv(os.path.join(rt_root, 'all_stories.tok'), sep='\t')
@@ -168,6 +169,7 @@ def tokenize_story(story, tokenizer):
     tokenized_story = tokenizer.encode(story, return_tensors='pt')
     #since passing only one story, remove the batch dimension
     tokenized_story = tokenized_story.squeeze()
+
     return tokenized_story
 
 
@@ -208,7 +210,7 @@ def return_surprisals(model, token_list, device='cuda'):
         token_list = token_list[-model.config.block_size:]
     token_tensor = torch.tensor(token_list).unsqueeze(0).to(device)
     with torch.no_grad():
-        logits, _ = model(token_tensor[:, :-1], token_tensor[:, 1:])
+        logits, _ = model(token_tensor[:, :-1], token_tensor[:, 1:]) #probably don't need the second tensor
     probs = F.log_softmax(logits, dim=-1)
     token_logprob = probs[0, -1, token_tensor[0, -1]].item()
     return -token_logprob

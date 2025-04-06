@@ -10,7 +10,7 @@ dataset = 'babylm_full_bpe_100M_8k'
 wandb_log = True # disabled by default
 wandb_project = 'wikipedia'
 sysname = "local" if "pop-os" in platform.node() else "server"
-runtype = "randomseed_test" # default or random seed test
+runtype = "default" # default or random seed test
  
 save_sample_to_file = True # if True, save a sample to file after each eval, overwrite in config
 sampling_frequency = 10000 # how often to sample from the model, overwrite in config
@@ -87,7 +87,7 @@ log_interval = 10 # don't print too too often
 always_save_checkpoint = True
 
 gradient_accumulation_steps = 4 * 2
-batch_size = 32  #64
+batch_size = 128  #32  #64
 block_size = 256
 
 
@@ -98,20 +98,39 @@ dropout = 0.1
 
 max_iters = 44000
 
-#Using Hyperparameters from BabyStories paper
-learning_rate = 1e-5 #Default GPT2 acc to Andrej Repo is 6e-4. LR used in 6x6_10M is 5e-4
+#Using Hyperparameters from BabyStories paper - Not in V2
+#In V2, we are using "square root scaling rule" from -  https://www.cs.princeton.edu/~smalladi/blog/2024/01/22/SDEs-ScalingRules/
+# Basically doing new learning rate = old learning rate * sqrt(new batch size / old batch size)
+# Old batch size = 32, New batch size = 128 - so new learning rate = 1e-5 * sqrt(128/32) = 1e-5 * 2 = 2e-5
+learning_rate = 2e-5 #1e-5 #Default GPT2 acc to Andrej Repo is 6e-4. LR used in 6x6_10M is 5e-4
 lr_decay_iters = 44000 # make equal to max_iters usually
-min_lr = 1e-6 # learning_rate / 10 usually
-#beta2 = 0.99 # make a bit bigger because number of tokens per iter is small
-#beta2 = 0.999 in BabyStories
-
-
-
+min_lr = 2e-6 # learning_rate / 10 usually
 
 # weight decay
 weight_decay = 1e-1
 
 warmup_iters = 100 # not super necessary potentially
+
+#beta2 = 0.99 # make a bit bigger because number of tokens per iter is small
+#beta2 = 0.999 in BabyStories
+
+# Technically have to scale beta 1 and beta 2 as well, but not sure if it is necessary
+# β1=1−κ(1−β1), β2=1−κ(1−β2), where k is the scaling factor
+# Old beta 1 = 0.9, Old beta 2 = 0.95, k = 128/32 = 4
+# New beta 1 = 1 - 4(1-0.9) = 1 - 4*0.1 = 0.6
+# New beta 2 = 1 - 4(1-0.95) = 1 - 4*0.05 = 0.8
+# New beta 1 = 0.6, New beta 2 = 0.8 (However, not doing anything about it for now)
+
+#Batch Size Logic
+#WAnt to train on equivalent of 100 Epochs of 100M Words
+#Keeping Context Window same as 256
+# Assuming we keep same iterations as v1 (44000 iterations)
+# We need to scale batch size to 128 to increase number of tokens seen per iteration to 128*256*8 = 262144 tokens
+# 262144 tokens per iteration * 44000 iterations = 11.52B tokens
+# 11.52B tokens / 100M / 1.3 = 88.6 epochs
+
+
+
 
 
 # on macbook also add

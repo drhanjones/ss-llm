@@ -65,6 +65,11 @@ class CausalSelfAttention(nn.Module):
         if self.wm_mask:
             print("Setting flash to False because wm_mask is enabled")
             self.flash = False # disable for now to test manually implemented attention with mask
+        #Comment out and remove ELSE below because it was added to run inverted masking inference experiments and if masking experiments are made into non masking during inference, they will automatically run on flash attention which if not intended, but then because thye were trained on non flash, they will have a bias variable in the state_dict. Either remove that or remove this
+        # else:
+            
+        #     self.flash = False
+
         if not self.flash:
             #print("WARNING: using slow attention. Flash Attention requires PyTorch >= 2.0")
             # causal mask to ensure that attention is only applied to the left in the input sequence
@@ -158,6 +163,8 @@ class CausalSelfAttention(nn.Module):
             if decay_length != n:
                 assert decay_length > n
                 decay_values = decay_values[:n]
+        elif decay_type == "ALiBi":
+            pass
 
         # Apply the decay values to the lower triangle
 
@@ -218,7 +225,14 @@ class CausalSelfAttention(nn.Module):
                     att = att * wm_mask
                     #Now we need to add the min_vals back to the att matrix
                     #att = att + min_vals
-
+            elif self.wm_setting_type == "alibi":
+                """ALiBi has different masks for different heads
+                    In, get_decay_weight_matrix, we have to return a matrix of shape (n, n) for each head. Thus, pass decay_type as "ALiBi" 
+                    and the function will return a tensor of shape (n_head, n, n) where each head has a different mask
+                    Basically its a linearly decreasing mask that goes from -1 to -n for each head multiplied by the m depending of what head. And m = 2^(-8/n) and n is the number of heads. And each head gets 
+                """
+                pass
+            
             att = att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
             att = F.softmax(att, dim=-1)
             att = self.attn_dropout(att)
@@ -302,8 +316,6 @@ class GPTConfig:
     wm_setting_type: str = "old" # old or new
 
 
-
-
 class GPT(nn.Module):
 
     def __init__(self, config):
@@ -311,7 +323,7 @@ class GPT(nn.Module):
         assert config.vocab_size is not None
         assert config.block_size is not None
         self.config = config
-        #print("H3 wm_mask: ", config.wmconfig.wm_mask)
+        #print("H3 wm_mask: ", config)
         self.transformer = nn.ModuleDict(dict(
             wte = nn.Embedding(config.vocab_size, config.n_embd),
             wpe = nn.Embedding(config.block_size, config.n_embd),

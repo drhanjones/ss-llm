@@ -33,10 +33,10 @@ output_root=$HOME/repo/ss-llm/nanoGPT/output_dump
 data_root=$HOME/repo/ss-llm/nanoGPT/data
 
 #output_dir=$output_root/out-babylm_full_bpe_8k-6x6-nomask-5768066-2gramgpt
-data_dir=$data_root/babylm_full_bpe_8k
+#data_dir=$data_root/babylm_full_bpe_100M_8k
 
 output_dir=$output_root/$output_dir_dynamic
-#data_dir=$data_root/$data_dir_dynamic
+data_dir=$data_root/$data_dir_dynamic
 
 
 python babylm_eval.py --model_type=nanogpt --output_dir $output_dir --data_dir $data_dir --tasks all

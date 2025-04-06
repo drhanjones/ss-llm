@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="/home/abishekthamma/PycharmProjects/masters_thesis/ss-llm/nanoGPT/results/results.db" readonly="0" foreign_keys="0" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="1"/></window><tab_structure><column_width id="0" width="286"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="4595"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,11:mainWordDetails"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="BlimpResultsSubtaskwiseBreakdown" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort><column index="6" mode="0"/></sort><column_widths><column index="2" value="263"/><column index="3" value="541"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="BlimpResultsSubtaskwiseBreakdownT2" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="77"/><column index="2" value="299"/><column index="3" value="300"/><column index="4" value="139"/><column index="5" value="113"/><column index="6" value="59"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="BlimpSubtaskGroundTruth" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort><column index="11" mode="1"/></sort><column_widths><column index="1" value="59"/><column index="2" value="136"/><column index="3" value="518"/><column index="4" value="536"/><column index="5" value="170"/><column index="6" value="139"/><column index="7" value="71"/><column index="8" value="233"/><column index="9" value="224"/><column index="10" value="200"/><column index="11" value="190"/></column_widths><filter_values><column index="5" value="subject_ver"/></filter_values><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Model" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort><column index="10" mode="0"/></sort><column_widths><column index="1" value="65"/><column index="2" value="406"/><column index="3" value="90"/><column index="4" value="86"/><column index="5" value="84"/><column index="6" value="74"/><column index="7" value="164"/><column index="8" value="77"/><column index="9" value="103"/><column index="10" value="49"/><column index="11" value="66"/><column index="12" value="117"/><column index="13" value="120"/><column index="14" value="111"/><column index="15" value="149"/><column index="16" value="119"/><column index="17" value="178"/></column_widths><filter_values><column index="4" value="6"/><column index="8" value="32"/><column index="12" value="Non"/><column index="15" value="0"/><column index="17" value="8k"/></filter_values><conditional_formats/><row_id_formats><column index="2"><format condition="=8569444" background="#ffffff" foreground="#000000" font="DejaVu Math TeX Gyre,10,-1,5,50,0,0,0,0,0" align="0"/></column></row_id_formats><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="ModelSurprisalScores" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="65"/><column index="2" value="98"/><column index="3" value="152"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="RTDundeeCorpus" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort><column index="1" mode="0"/></sort><column_widths><column index="1" value="191"/><column index="2" value="98"/><column index="3" value="73"/><column index="4" value="104"/><column index="5" value="161"/><column index="6" value="92"/><column index="7" value="102"/><column index="8" value="145"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="RTModelPredict" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="65"/><column index="2" value="49"/><column index="3" value="73"/><column index="4" value="98"/><column index="5" value="136"/><column index="6" value="136"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="SPRTNaturalStories" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort><column index="1" mode="0"/></sort><column_widths><column index="1" value="66"/><column index="2" value="145"/><column index="3" value="53"/><column index="4" value="120"/><column index="5" value="98"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Story" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort><column index="1" mode="0"/></sort><column_widths><column index="1" value="98"/><column index="2" value="71"/><column index="3" value="59"/><column index="4" value="59"/><column index="5" value="213"/><column index="6" value="69"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="TokenizedStory" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="41"/><column index="2" value="90"/><column index="3" value="98"/><column index="4" value="75"/><column index="5" value="87"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Tokenizer" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="90"/><column index="2" value="178"/><column index="3" value="116"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="WordDetails" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="69"/><column index="2" value="122"/><column index="3" value="127"/><column index="4" value="144"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 12">With RESULT_TABLE AS (
+WITH SPRT_AVG AS (
+SELECT SPRTNaturalStories.StoryWordID, avg(SPRTNaturalStories.RT) as Avg_RT
+FROM SPRTNaturalStories
+GROUP BY SPRTNaturalStories.StoryWordID
+)
+
+SELECT ModelSurprisalScores.ModelID, ModelSurprisalScores.StoryWordID,
+Story.CorpusID, Story.StoryID, 
+WordDetails.CharacterLength, WordDetails.LogFrequencies,  
+ModelSurprisalScores.SurprisalScore,
+SPRT_AVG.Avg_RT,
+Story.POSTag,
+
+LAG(WordDetails.CharacterLength, 1) OVER (PARTITION BY Story.StoryID ORDER BY Story.WordID) as prev_len,
+LAG(WordDetails.LogFrequencies, 1) OVER (PARTITION BY Story.StoryID ORDER BY Story.WordID) as prev_freq,
+LAG(ModelSurprisalScores.SurprisalScore, 1) OVER (PARTITION BY Story.StoryID ORDER BY Story.WordID) as prev_surp,
+
+LAG(WordDetails.CharacterLength, 2) OVER (PARTITION BY Story.StoryID ORDER BY Story.WordID) as prev2_len,
+LAG(WordDetails.LogFrequencies, 2) OVER (PARTITION BY Story.StoryID ORDER BY Story.WordID) as prev2_freq,
+LAG(ModelSurprisalScores.SurprisalScore, 2) OVER (PARTITION BY Story.StoryID ORDER BY Story.WordID) as prev2_surp,
+
+LAG(WordDetails.CharacterLength, 3) OVER (PARTITION BY Story.StoryID ORDER BY Story.WordID) as prev3_len,
+LAG(WordDetails.LogFrequencies, 3) OVER (PARTITION BY Story.StoryID ORDER BY Story.WordID) as prev3_freq,
+LAG(ModelSurprisalScores.SurprisalScore, 3) OVER (PARTITION BY Story.StoryID ORDER BY Story.WordID) as prev3_surp
+
+from ModelSurprisalScores
+JOIN Story on Story.StoryWordID = ModelSurprisalScores.StoryWordID
+JOIN WordDetails on WordDetails.WordUID = Story.WordUID
+JOIN SPRT_AVG on SPRT_AVG.StoryWordID = ModelSurprisalScores.StoryWordID
+Where ModelSurprisalScores.ModelID = 8465733 
+) 
+SELECT * FROM RESULT_TABLE 
+WHERE prev3_len IS NOT NULL</sql><sql name="SQL 13">WITH TokenizedStoryPart AS(
+                SELECT * FROM 
+                  TokenizedStory
+                  JOIN Story ON TokenizedStory.StoryWordID = Story.StoryWordID
+                  WHERE TokenizerID=1 AND Story.CorpusID=2
+                  )
+SELECT StoryID, group_concat(Word, ' ') as OriginalStory, group_concat(TokenValue, ' ') as TokenizedStory
+FROM TokenizedStoryPart
+GROUP BY StoryID
+</sql><sql name="SQL 15">WITH RankedRows AS (
+    SELECT 
+        TokenizedStory.*, 
+        Story.*, 
+        ROW_NUMBER() OVER (PARTITION BY Story.StoryID ORDER BY TokenizedStory.StoryWordID ASC) AS RowAsc,
+        ROW_NUMBER() OVER (PARTITION BY Story.StoryID ORDER BY TokenizedStory.StoryWordID DESC) AS RowDesc
+    FROM TokenizedStory
+    JOIN Story
+        ON Story.StoryWordID = TokenizedStory.StoryWordID
+    WHERE Story.CorpusID = 2 AND TokenizedStory.TokenizerID = 4
+)
+SELECT *
+FROM RankedRows
+WHERE RowAsc &lt;= 10 OR RowDesc &lt;= 10
+ORDER BY StoryID, RowAsc;
+</sql><sql name="SQL 17">WITH modelcounts as (
+Select ModelID, count(*)
+FROM ModelSurprisalScores
+GROUP BY ModelID
+HAVING count(*) != 61757
+)
+SELECT * FROM Model
+JOIN modelcounts on  modelcounts.ModelID = Model.ModelID 
+ORDER BY Model.ModelID DESC
+</sql><sql name="SQL 29">SELECT SPRTNaturalStories.RTUID, 
+SPRTNaturalStories.WorkerID, 
+SPRTNaturalStories.StoryWordID, 
+SPRTNaturalStories.RT, 
+WordDetails.Word as WordCategory, 
+WordDetails.CharacterLength, 
+WordDetails.WordUID as WordCategoryID,
+WordDetails.LogFrequencies as LogFrequencies,
+Story.POSTag as POSTag
+FROM SPRTNaturalStories 
+JOIN Story on SPRTNaturalStories.StoryWordID = Story.StoryWordID 
+JOIN WordDetails on WordDetails.WordUID = Story.WordUID 
+ORDER BY WorkerID
+</sql><sql name="SQL 12">SELECT RTDundeeCorpus.RTUID,
+RTDundeeCorpus.WorkerID, 
+RTDundeeCorpus.StoryWordID, 
+RTDundeeCorpus.GazeDuration, 
+RTDundeeCorpus.IgnoreRow,
+WordDetails.Word as WordCategory, 
+WordDetails.CharacterLength, 
+WordDetails.WordUID as WordCategoryID,
+WordDetails.LogFrequencies as LogFrequencies,
+Story.POSTag as POSTag
+FROM RTDundeeCorpus 
+JOIN Story on RTDundeeCorpus.StoryWordID = Story.StoryWordID 
+JOIN WordDetails on WordDetails.WordUID = Story.WordUID 
+WHERE RTDundeeCorpus.IgnoreRow == 0
+ORDER BY WorkerID, LogFrequencies
+</sql><sql name="SQL 14">WITH RTDundeeCorpus_CTE as (SELECT * FROM RTDundeeCorpus
+WHERE RTDundeeCorpus.IgnoreRow == 0)
+
+SELECT RTDundeeCorpus_CTE.StoryWordID, 
+avg(RTDundeeCorpus_CTE.GazeDuration)
+WordDetails.Word as WordCategory, 
+WordDetails.CharacterLength, 
+WordDetails.WordUID as WordCategoryID,
+WordDetails.LogFrequencies as LogFrequencies,
+Story.POSTag as POSTag
+FROM RTDundeeCorpus_CTE 
+JOIN Story on RTDundeeCorpus_CTE.StoryWordID = Story.StoryWordID 
+JOIN WordDetails on WordDetails.WordUID = Story.WordUID 
+GROUP BY RTDundeeCorpus_CTE.StoryWordID
+ORDER BY WorkerID
+</sql><sql name="SQL 14">WITH FilteredModel AS (
+            SELECT StoryWordID, SurprisalScore
+            FROM ModelSurprisalScores
+            WHERE ModelID = 6890225
+            )
+
+SELECT RTDundeeCorpus.RTUID, 
+RTDundeeCorpus.WorkerID, 
+RTDundeeCorpus.StoryWordID, 
+RTDundeeCorpus.GazeDuration,
+
+WordDetails.Word as WordCategory, 
+WordDetails.CharacterLength, 
+WordDetails.WordUID as WordCategoryID,
+WordDetails.LogFrequencies as LogFrequencies,
+
+Story.POSTag as POSTag,
+Story.NERTag as NERTag,
+RTDundeeCorpus.IgnoreRow, 
+FilteredModel.SurprisalScore as SurprisalScore
+
+FROM RTDundeeCorpus
+JOIN Story on RTDundeeCorpus.StoryWordID = Story.StoryWordID 
+JOIN WordDetails on WordDetails.WordUID = Story.WordUID 
+JOIN FilteredModel on FilteredModel.StoryWordID = RTDundeeCorpus.StoryWordID
+
+--WHERE RTDundeeCorpus.IgnoreRow=0
+
+ORDER BY WorkerID, RTDundeeCorpus.StoryWordID</sql><sql name="SQL 10">UPDATE BlimpResultsSubtaskwiseBreakdown 
+SET ModelID = (
+SELECT Model.ModelID 
+FROM Model
+WHERE  Model.OutputFolderName = BlimpResultsSubtaskwiseBreakdown.ModelName
+)</sql><sql name="SQL 11">SELECT DISTINCT NERTag FROM STORY </sql><current_tab id="9"/></tab_sql></sqlb_project>

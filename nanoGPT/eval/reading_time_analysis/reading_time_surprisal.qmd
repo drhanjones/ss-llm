@@ -1,0 +1,76 @@
+---
+format: 
+  html:
+    code-fold: true
+---
+
+```{r}
+#loading packages
+library(DBI)
+library(lme4)
+library(DT)
+```
+
+```{r}
+RESULTS_DB_PATH <- "/home/abishekthamma/PycharmProjects/masters_thesis/ss-llm/nanoGPT/results/results.db"
+results_db <- dbConnect(RSQLite::SQLite(), RESULTS_DB_PATH)
+
+baseline_df <- dbGetQuery(results_db,"SELECT SPRTNaturalStories.RTUID, 
+SPRTNaturalStories.WorkerID, 
+SPRTNaturalStories.StoryWordID, 
+SPRTNaturalStories.RT, 
+WordDetails.Word as WordCategory, 
+WordDetails.CharacterLength, 
+WordDetails.WordUID as WordCategoryID,
+WordDetails.LogFrequencies as LogFrequencies,
+Story.POSTag as POSTag
+FROM SPRTNaturalStories 
+JOIN Story on SPRTNaturalStories.StoryWordID = Story.StoryWordID 
+JOIN WordDetails on WordDetails.WordUID = Story.WordUID 
+")
+
+print.data.frame(baseline_df[1:5,])
+```
+
+```{r}
+baseline_df$LogRT <- log(baseline_df$RT)
+
+baseline_df$WorkerID <- as.factor(baseline_df$WorkerID)
+baseline_df$WordCategoryID <- as.factor(baseline_df$WordCategoryID)
+baseline_df$POSTag <- as.factor(baseline_df$POSTag)
+baseline_df$CharacterLength_c <- scale(baseline_df$CharacterLength)
+
+#Should I scale Log Frequencies(?)
+baseline_df$LogFrequencies_c <- scale(baseline_df$LogFrequencies)
+print.data.frame(baseline_df[1:5,])
+
+```
+
+```{r}
+exp_index <- sample(1:nrow(baseline_df), nrow(baseline_df)*0.5)
+
+baseline_df$exp <- 0
+baseline_df$exp[exp_index] <- 1
+baseline_df$exp <- as.factor(baseline_df$exp)
+
+exploratory_df <- baseline_df[baseline_df$exp == 1,]
+test_df <- baseline_df[baseline_df$exp == 0,]
+
+```
+
+
+```{r}
+start.time <- Sys.time()
+fit_formula <- "LogRT ~ 1  + ( 1 | WorkerID) + (1 | WordCategoryID)"
+fit <- lmer(fit_formula, data=exploratory_df, REML=F)
+summary(fit)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+
+```
+
+
+```{r}
+
+```
