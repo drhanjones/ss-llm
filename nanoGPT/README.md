@@ -1,4 +1,16 @@
 
+# NOTE: ! IGNORE README FOR NOW - BELOW IS README FROM OLD NANOGPT REPO
+
+
+
+ 
+
+
+
+
+
+
+
 # nanoGPT
 
 ![nanoGPT](assets/nanogpt.jpg)
