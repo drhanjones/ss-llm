@@ -376,7 +376,7 @@ class GPT(nn.Module):
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def forward(self, idx, targets=None):
+    def forward(self, idx, targets=None, hidden_states=False):
 
         device = idx.device
         b, t = idx.size()
@@ -388,8 +388,12 @@ class GPT(nn.Module):
         tok_emb = self.transformer.wte(idx) # token embeddings of shape (b, t, n_embd)
         pos_emb = self.transformer.wpe(pos) # position embeddings of shape (t, n_embd)
         x = self.transformer.drop(tok_emb + pos_emb)
+        hidden_states_list = [x] if hidden_states else None
         for block in self.transformer.h:
             x = block(x)
+            if hidden_states:
+                hidden_states_list.append(x)
+
         x = self.transformer.ln_f(x)
         #breakpoint()
         if targets is not None:
@@ -403,6 +407,8 @@ class GPT(nn.Module):
             logits = self.lm_head(x[:, [-1], :]) # note: using list [-1] to preserve the time dim
             loss = None
 
+        if hidden_states:
+            return logits, loss, hidden_states_list
         return logits, loss
 
     def crop_block_size(self, block_size):
