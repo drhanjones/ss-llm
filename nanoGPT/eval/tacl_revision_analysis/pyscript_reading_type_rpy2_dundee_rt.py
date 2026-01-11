@@ -50,6 +50,9 @@ elif "pop-os" in platform.node():
     raise NotImplementedError("This code is not intended to be run on pop-os machine yet.")
     ROOT_PATH = "/home/athamma1/Projects/ss-llm"
     RESULTS_DB_PATH = f"{ROOT_PATH}/nanoGPT/results/results.db"
+elif "tux14psy" in platform.node():
+    ROOT_PATH = "/home/athamma/Projects/ss-llm/ss-llm"
+    RESULTS_DB_PATH = f"{ROOT_PATH}/nanoGPT/results/results.db"
 elif "Linux" in platform.system():
     ROOT_PATH = "/gpfs/home5/athamma1/Projects/ss-llm"
     RESULTS_DB_PATH = f"{ROOT_PATH}/results.db"
