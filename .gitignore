@@ -182,3 +182,6 @@ webapp_test/streamlit_test
 nanoGPT/eval/reading_time_analysis/reading_time_surprisal_files
 results.db
 *lock*
+
+.DS_Store
+*.DS_Store
