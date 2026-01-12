@@ -437,8 +437,8 @@ model_pairs_list = [
     #
     # Pair 7
     {
-        "fit_formula_b": f"LogRT ~ prev_word_skipped + (1 | WorkerID) + (1 | WordCategoryID)",
-        "fit_formula_m": f"LogRT ~ prev_word_skipped + {surprisal_terms} + (1 + prev_word_skipped + {surprisal_terms} | WorkerID) + (1 | WordCategoryID)",
+        "fit_formula_b": f"LogRT ~ (1 | WorkerID) + (1 | WordCategoryID)",
+        "fit_formula_m": f"LogRT ~ {surprisal_terms} + (1 + {surprisal_terms} | WorkerID) + (1 | WordCategoryID)",
         "Notes": "Secondary Check, item effect model",
     },
 ]
@@ -511,7 +511,7 @@ for model_id in tqdm.tqdm(model_id_list):
             fit_stats_b,
         )
         append_or_overwrite_csv(write_path, append_row, save_as="json", equation_pair_index=equation_pair_index)
-        release_claim(model_id) 
+        release_claim(model_id)
     except Exception as e:
         print(f"Error for model id {model_id}: {e}")
         continue
